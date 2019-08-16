@@ -7,5 +7,3 @@ set -e
 ############################################################################
 chgrp -R www-data /var/www/data
 chmod -R g+rw /var/www/data
-
-echo "End Preflight"
