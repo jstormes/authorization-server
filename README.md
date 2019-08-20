@@ -1,3 +1,53 @@
+# Basic Functions/Tests Needed:
+
+## User
+* List Users
+* Get User
+* Create User
+* Update User
+* Delete User
+
+
+## Scope
+* List Scopes
+* Get Scope
+* Create Scope
+* Update Scope
+* Delete Scope
+
+
+## Client
+* List Clients
+* Get Client
+* Create Client
+* Update Client
+* Delete Client
+
+
+## Linking User
+* List Scopes By User
+* List Users By Scope
+* Link Scope to User
+* Unlink Scope from User
+
+
+## Linking Client
+* List Scopes By Client
+* List Clients By Scope
+* Link Scope to Client
+* Unlink Scope from Client
+
+
+## OAuth2 
+* Client Auth
+* Authorization Code
+* Password
+* Refresh
+* Device Code
+
+
+
+
 # Expressive Skeleton and Installer
 
 [![Build Status](https://secure.travis-ci.org/zendframework/zend-expressive-skeleton.svg?branch=master)](https://secure.travis-ci.org/zendframework/zend-expressive-skeleton)
