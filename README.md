@@ -1,4 +1,8 @@
-# Basic Functions/Tests Needed:
+# Authorization Server
+
+This server provides basic authorization using the OAuth2 standard.
+
+API endpoints are setup for basic administration functions.
 
 ## Proposed Endpoints
 
@@ -12,6 +16,7 @@
 * Get User's Scopes     /v1/user/{user_id}/scopes           (get)
 * Add Scope to User     /v1/user/{user_id}/scope/{scope_id} (post)
 * Del Scope From User   /v1/user/{user_id}/scope/{scope_id} (delete)
+* Get User's history    /v1/user/{user_id}/history          (get)
 
 
 ### Client
@@ -24,6 +29,7 @@
 * Get Client's Scopes   /v1/client/{client_id}/scopes           (get)
 * Add Scope to Client   /v1/client/{client_id}/scope/{scope_id} (post)
 * Del Scope from Client /v1/client/{client_id}/scope/{scope_id} (delete)
+* Get Client's history  /v1/client/{client_id}/history          (get)
 
 
 ### Scope
@@ -39,10 +45,13 @@
 * Del User from Scope   /v1/scope/{scope_id}/user/{user_id}     (delete)
 * Add Client to Scope   /v1/scope/{scope_id}/client/{client_id} (post)
 * Del Client from Scope /v1/scope/{scope_id}/client/{client_id} (delete)
+* Get Scope's history   /v1/scope/{scope_id}/history            (get)
 
 
-NOTE: If it has an 's' on the end it can be filtered and sorted.
-      ?filter=xyz&sort=name
+NOTE: If it has an 's' on the end it can be filtered, sorted and paged.
+      ?filter=xyz&sort=name.
+      Histories can also be filtered, sorted and paged along with date ranges.
+      ?filter=xyz&sort=name&(before,after,between)
 
 
 ### OAuth2 
