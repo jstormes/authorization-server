@@ -1,44 +1,51 @@
 # Basic Functions/Tests Needed:
 
-## User
-* List Users
-* Get User
-* Create User
-* Update User
-* Delete User
+## Proposed Endpoints
+
+### User
+* Get Users             /v1/users                           (get)
+* Get User              /v1/user/{user_id}                  (get) 
+* Get Empty User        /v1/user                            (get) 
+* Create User           /v1/user                            (post)
+* Update User           /v1/user/{user_id}                  (post)
+* Delete User           /v1/user/{user_id}                  (delete)
+* Get User's Scopes     /v1/user/{user_id}/scopes           (get)
+* Add Scope to User     /v1/user/{user_id}/scope/{scope_id} (post)
+* Del Scope From User   /v1/user/{user_id}/scope/{scope_id} (delete)
 
 
-## Scope
-* List Scopes
-* Get Scope
-* Create Scope
-* Update Scope
-* Delete Scope
+### Client
+* Get Clients           /v1/clients                             (get)
+* Get Client            /v1/client/{client_id}                  (get)
+* Get Empty Client      /v1/client                              (get)
+* Create Client         /v1/client                              (post)
+* Update Client         /v1/client/{client_id}                  (post)
+* Delete Client         /v1/client/{client_id}                  (delete)
+* Get Client's Scopes   /v1/client/{client_id}/scopes           (get)
+* Add Scope to Client   /v1/client/{client_id}/scope/{scope_id} (post)
+* Del Scope from Client /v1/client/{client_id}/scope/{scope_id} (delete)
 
 
-## Client
-* List Clients
-* Get Client
-* Create Client
-* Update Client
-* Delete Client
+### Scope
+* Get Scopes            /v1/scopes                              (get)
+* Get Scope             /v1/scope/{scope_id}                    (get)
+* Get Empty Scope       /v1/scope                               (get)
+* Create Scope          /v1/scope                               (post)
+* Update Scope          /v1/scope/{scope_id}                    (post)
+* Delete Scope          /v1/scope/{scope_id}                    (delete)
+* Get Users by Scope    /v1/scope/{scope_id}/users              (get)
+* Get Clients by Scope  /v1/scope/{scope_id}/clients            (get)
+* Add User to Scope     /v1/scope/{scope_id}/user/{user_id}     (post)
+* Del User from Scope   /v1/scope/{scope_id}/user/{user_id}     (delete)
+* Add Client to Scope   /v1/scope/{scope_id}/client/{client_id} (post)
+* Del Client from Scope /v1/scope/{scope_id}/client/{client_id} (delete)
 
 
-## Linking User
-* List Scopes By User
-* List Users By Scope
-* Link Scope to User
-* Unlink Scope from User
+NOTE: If it has an 's' on the end it can be filtered and sorted.
+      ?filter=xyz&sort=name
 
 
-## Linking Client
-* List Scopes By Client
-* List Clients By Scope
-* Link Scope to Client
-* Unlink Scope from Client
-
-
-## OAuth2 
+### OAuth2 
 * Client Auth
 * Authorization Code
 * Password
