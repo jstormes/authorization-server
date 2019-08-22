@@ -47,6 +47,17 @@ API endpoints are setup for basic administration functions.
 * Del Client from Scope /v1/scope/{scope_id}/client/{client_id} (delete)
 * Get Scope's history   /v1/scope/{scope_id}/history            (get)
 
+### History
+* Get history           /v1/history                             (get)
+
+### Active Refresh Tokens
+* Get Active Users      /v1/active-refresh/users                (get)
+* Get Active Clients    /v1/active-refresh/clients              (get)
+* Logout User           /v1/active-refresh/user/{user_id}       (delete)
+* Logout Client         /v1/active-refresh/client/{client_id}   (delete)
+
+### Who am I
+* Validate Token        /v1/whoami                              (get)
 
 NOTE: If it has an 's' on the end it can be filtered, sorted and paged.
       ?filter=xyz&sort=name.
@@ -57,9 +68,10 @@ NOTE: If it has an 's' on the end it can be filtered, sorted and paged.
 ### OAuth2 
 * Client Auth
 * Authorization Code
-* Password
+* Password?
 * Refresh
-* Device Code
+* Device Code?
+* Logout
 
 
 
