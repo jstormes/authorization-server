@@ -60,9 +60,9 @@ API endpoints are setup for basic administration functions.
 * Validate Token        /v1/whoami                              (get)
 
 NOTE: If it has an 's' on the end it can be filtered, sorted and paged.
-      ?filter=xyz&sort=name.
+      ?filter=xyz&sort=name&page=1.
       Histories can also be filtered, sorted and paged along with date ranges.
-      ?filter=xyz&sort=name&(before,after,between)
+      ?filter=xyz&sort=name&(before,after,between)&page=1
 
 
 ### OAuth2 

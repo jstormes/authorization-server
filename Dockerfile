@@ -13,10 +13,20 @@ RUN apt-get -y update \
     && yes '' | pecl install -f redis \
        && rm -rf /tmp/pear \
        && docker-php-ext-enable redis \
-    && docker-php-ext-install gd zip
+    && docker-php-ext-install gd zip pdo pdo_mysql
 
 ############################################################################
 # Configure webserver
 ############################################################################
-RUN a2enmod rewrite 
+RUN a2enmod rewrite
+
+############################################################################
+# Add preflights to apache2-foreground
+############################################################################
+RUN sed -i "3i[[ -f /root/bin/docker-preflight.sh ]] && bash /root/bin/docker-preflight.sh" /usr/local/bin/apache2-foreground \
+    && sed -i "4i[[ -f /var/www/bin/docker-preflight.sh ]] && bash /var/www/bin/docker-preflight.sh" /usr/local/bin/apache2-foreground
+
+ENV PATH /var/www/vendor/bin:/var/www/bin:/root/bin:root/.composer/vendor/bin:$PATH
+
+WORKDIR /var/www
 
