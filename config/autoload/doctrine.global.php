@@ -25,12 +25,7 @@ return [
         'connection' => [
             'orm_default' => [
                 'params' => [
-                    'url' => getenv('DB'),
-                    //'driver' => 'pdo_mysql',
-                    //'host' => 'db', // uses the name of the container from docker-compose
-                    //'dbname' => 'dbname',
-                    //'user' => 'dbuser',
-                    //'password' => '654321',
+                    'url' => getenv('DB')
                 ],
             ],
         ],
