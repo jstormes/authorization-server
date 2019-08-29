@@ -39,7 +39,7 @@ return [
             'app_entity' => [
                 'class' => AnnotationDriver::class,
                 'cache' => 'array',
-                'paths' => [__DIR__ . '/../../src/App/src/Entity'],
+                'paths' => [__DIR__ . '/../../src/App/Entity'],
             ],
         ],
     ],
