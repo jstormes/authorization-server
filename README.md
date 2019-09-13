@@ -74,6 +74,26 @@ NOTE: If it has an 's' on the end it can be filtered, sorted and paged.
 * Logout
 
 
+# Database setup and security theory
+
+The database access can be divided into two distinct security groups.  The first is the DDL database user id.
+This user id can change the table schema and create the database.  The second user is the DML user.  This user id 
+can only manipulate the data in the tables, but cannot manipulate the history tables.  The application configuration 
+only has the DML user.
+
+The theory is this.  If the application is comprised, the attacker will have to go though extra effort to destroy 
+history of the attack.  If the the application has only a DML user, the attacker will then have to "crack" the 
+database's DML user (root).  
+  
+In practice, this means that the tools to setup the database will have to be outside the applications main flow.
+The setup scrip will have to ask for a privileged user to setup or update the database schema, and even setup the
+DML user.  By having the application's setup script create the DML user, it can ensure that no extra privileges
+are setup.   This also means that the database setup script will need to be interactive and ask for the DDL user's
+credentials at runtime.
+
+The setup script should check that the DML user does not have elevated pillages.  
+
+
 
 
 # Expressive Skeleton and Installer

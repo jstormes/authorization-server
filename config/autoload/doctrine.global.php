@@ -25,7 +25,7 @@ return [
         'connection' => [
             'orm_default' => [
                 'params' => [
-                    'url' => getenv('DB')
+                    'url' => getenv('DB')  // Get doctrine Database connection from Environment variable.
                 ],
             ],
         ],

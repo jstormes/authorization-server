@@ -54,6 +54,7 @@
         "zendframework/zend-stdlib": "^3.2.1"
     },
     "require-dev": {
+        "ext-pdo": "*",
         "phpunit/phpunit": "^7.0.1",
         "roave/security-advisories": "dev-master",
         "squizlabs/php_codesniffer": "^2.9.1",

@@ -2,7 +2,12 @@
 
 set -e
 
-echo "Starting docker-preflight"
+SCRIPT=$(readlink -f "$0")
+
+echo "############################################################################################################"
+echo "# Starting $SCRIPT"
+echo "############################################################################################################"
+
 
 ############################################################################
 # Set permission on data directory, for Zend Config Cache.
@@ -16,7 +21,9 @@ then
       echo "DB environment variable is empty."
 else
       echo "DB environment variable is NOT empty, testing DB."
-      php /var/www/bin/test-db.php
+      php /var/www/bin/auth-server.php test-db
 fi
 
-echo "Ending docker-preflight"
+echo "############################################################################################################"
+echo "# Exit $SCRIPT"
+echo "############################################################################################################"
