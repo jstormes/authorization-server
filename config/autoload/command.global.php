@@ -13,12 +13,14 @@ return [
 
         'factories' => [
             App\Command\TestDbCommand::class => App\Command\TestDbCommandFactory::class,
+            App\Command\CreateDbCommand::class => App\Command\CreateDbCommandFactory::class,
         ],
     ],
 
     'console' => [
         'commands' => [
             App\Command\TestDbCommand::class,
+            App\Command\CreateDbCommand::class,
         ],
     ],
 ];

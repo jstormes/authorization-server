@@ -11,8 +11,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use PDO;
 use Exception;
+use Symfony\Component\Console\Question\Question;
 
-class TestDbCommand extends Command
+class CreateDbCommand extends Command
 {
     /** @var LoggerInterface  */
     private $logger;
@@ -45,8 +46,8 @@ class TestDbCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('test-db')
-            ->setDescription('Test Database');
+        $this->setName('create-db')
+            ->setDescription('Create Database');
     }
 
     /**
@@ -55,14 +56,31 @@ class TestDbCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         try {
-            $output->writeln("Checking Database  ...");
+            $output->writeln("Creating Database  ...");
 
-            $this->connectToDatabase($this->databaseURL);
+            $rootDbUser = getenv('PMA_USER');
+            $rootDbPassword = getenv('PMA_PASSWORD');
 
-//            if (!$this->validateSchema($this->entityManager)) {
-//                $this->logger->critical("Database schema is not valid.");
-//                throw new Exception('Database schema is not valid.');
-//            }
+            if ((empty($rootDbUser))&&(empty($rootDbPassword))) {
+                $helper = $this->getHelper('question');
+                $usernameQuestion = new Question('Privileged (root) database user name: ');
+                $usernamePassword = new Question('Privileged (root) database user password: ');
+                $rootDbUser = $helper->ask($input, $output, $usernameQuestion);
+                $rootDbPassword = $helper->ask($input, $output, $usernamePassword);
+            }
+
+
+            $pdo = $this->connectToServer($this->getDbScheme($this->databaseURL), $this->getDbHost($this->databaseURL), $rootDbUser, $rootDbPassword);
+
+            $this->createDb($pdo, $this->getDbName($this->databaseURL));
+
+            $this->createUser($pdo, $this->getDbUser($this->databaseURL), $this->getDbPassword($this->databaseURL));
+
+            $this->grantPermissions($pdo, $this->getDbUser($this->databaseURL), $this->getDbName($this->databaseURL));
+
+//            $this->createSchema($pdo);
+
+//            $this->resetPermissions($pdo);
 
             $output->writeln("Database Testing Passed ...");
 
@@ -74,6 +92,58 @@ class TestDbCommand extends Command
             return -1;
         }
 
+    }
+
+    protected function connectToServer($scheme, $host, $user, $password)
+    {
+        try {
+            return new PDO("{$scheme}:host={$host}", $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+
+        }
+        catch (Exception $ex)
+        {
+            $this->logger->critical("Cannot connect to Database server '{$host}'.");
+            throw $ex;
+        }
+    }
+
+    protected function createDb($pdo, $databaseName)
+    {
+        try {
+            $query = $pdo->prepare("CREATE DATABASE IF NOT EXISTS $databaseName ");
+            $query->execute();
+        }
+        catch (Exception $ex)
+        {
+            $this->logger->critical("Cannot create to Database '{$databaseName}'.");
+            throw $ex;
+        }
+    }
+
+    protected function createUser($pdo, $user, $password)
+    {
+        try {
+            $query = $pdo->prepare("CREATE USER IF NOT EXISTS '{$user}'@'%' IDENTIFIED BY '{$password}'");
+            $query->execute();
+        }
+        catch (Exception $ex)
+        {
+            $this->logger->critical("Cannot create User '{$user}'.");
+            throw $ex;
+        }
+    }
+
+    protected function grantPermissions($pdo, $user, $database)
+    {
+        try {
+            $query = $pdo->prepare("GRANT ALL PRIVILEGES ON {$database}.* TO '{$user}'@'%'");
+            $query->execute();
+        }
+        catch (Exception $ex)
+        {
+            $this->logger->critical("Cannot grant user access to Database '{$database}'.");
+            throw $ex;
+        }
     }
 
     /**
@@ -158,7 +228,6 @@ class TestDbCommand extends Command
             }
             $this->logger->warning("Database {$databaseName} has no tables.");
 
-            return $pdo;
         }
         catch (Exception $ex)
         {

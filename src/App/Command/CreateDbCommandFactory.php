@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use Doctrine\DBAL\Exception\ConnectionException;
 use Doctrine\ORM\EntityManager;
 use Interop\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Exception;
 
-class TestDbCommandFactory
+use Doctrine\DBAL\Exception\ConnectionException;
+
+class CreateDbCommandFactory
 {
     public function __invoke(ContainerInterface $container)
     {
@@ -41,7 +42,7 @@ class TestDbCommandFactory
             }
         }
 
-        return new TestDbCommand($logger, $entityManager, $connectionString);
+        return new CreateDbCommand($logger, $entityManager, $connectionString);
     }
 
 }
