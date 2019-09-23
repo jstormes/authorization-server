@@ -93,6 +93,16 @@ credentials at runtime.
 
 The setup script should check that the DML user does not have elevated pillages.  
 
+To create the starting database from a Docker image:
+
+`docker build -t auth-server .`
+
+`docker run -it -e "DB=mysql://{db user}:{db password}@{db host}/{db name}" auth-server auth-server.php create-db`
+
+You will need to supply a privileged database user and password interactively.  This privileged user will create the
+user from the environment variable with restricted permissions. 
+
+
 
 
 
