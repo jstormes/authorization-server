@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Database;
+namespace CommandLine;
 
 
 
@@ -23,7 +23,8 @@ class ConfigProvider
     public function __invoke() : array
     {
         return [
-            'dependencies' => $this->getDependencies()
+            'dependencies' => $this->getDependencies(),
+            'console' => $this->getConsole()
         ];
     }
 
@@ -36,7 +37,18 @@ class ConfigProvider
             'invokables' => [
             ],
             'factories'  => [
-                AdapterInterface::class => AdapterFactory::class,
+                Command\VerifyDbCommand::class => Command\VerifyDbCommandFactory::class,
+                Command\CreateDbCommand::class => Command\CreateDbCommandFactory::class
+            ],
+        ];
+    }
+
+    public function getConsole() : array
+    {
+        return [
+            'commands' => [
+                Command\VerifyDbCommand::class,
+                Command\CreateDbCommand::class,
             ],
         ];
     }

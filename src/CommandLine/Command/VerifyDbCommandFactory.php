@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace CommandLine\Command;
 
+use Database\AdapterInterface;
 use Doctrine\DBAL\Exception\ConnectionException;
 use Doctrine\ORM\EntityManager;
 use Interop\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Exception;
 
-class TestDbCommandFactory
+class VerifyDbCommandFactory
 {
     public function __invoke(ContainerInterface $container)
     {
@@ -18,8 +19,8 @@ class TestDbCommandFactory
         $logger = $container->get(LoggerInterface::class);
 
         $config = $container->get('config');
-        $connectionString = $config['doctrine']['connection']['orm_default']['params']['url'];
-        if (empty($connectionString)) {
+        $databaseUrl = $config['doctrine']['connection']['orm_default']['params']['url'];
+        if (empty($databaseUrl)) {
             $logger->critical('Config option [\'doctrine\'][\'connection\'][\'orm_default\'][\'params\'][\'url\'] is empty.');
             throw new Exception('Config option [\'doctrine\'][\'connection\'][\'orm_default\'][\'params\'][\'url\'] is empty.');
         }
@@ -41,7 +42,9 @@ class TestDbCommandFactory
             }
         }
 
-        return new TestDbCommand($logger, $entityManager, $connectionString);
+        $databaseAdapter = $container->get(AdapterInterface::class);
+
+        return new VerifyDbCommand($logger, $entityManager, $databaseUrl, $databaseAdapter);
     }
 
 }

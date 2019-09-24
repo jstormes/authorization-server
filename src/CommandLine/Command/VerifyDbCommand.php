@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CommandLine\Command;
 
+use Database\AdapterInterface;
 use Doctrine\ORM\EntityManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -12,7 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use PDO;
 use Exception;
 
-class TestDbCommand extends Command
+class VerifyDbCommand extends Command
 {
     /** @var LoggerInterface  */
     private $logger;
@@ -23,19 +24,25 @@ class TestDbCommand extends Command
     /** @var String  */
     private $databaseURL;
 
+    /** @var AdapterInterface  */
+    private $databaseAdapter;
+
     /**
      * TestDbCommand Constructor.
      * @param LoggerInterface $logger
      * @param EntityManager $entityManager|null
      * @param String $databaseURL
+     * @param AdapterInterface $databaseAdapter
      */
-    public function __construct(LoggerInterface $logger, ?EntityManager $entityManager, String $databaseURL)
+    public function __construct(LoggerInterface $logger, ?EntityManager $entityManager, String $databaseURL, AdapterInterface $databaseAdapter)
     {
         $this->logger = $logger;
 
         $this->entityManager = $entityManager;
 
         $this->databaseURL = $databaseURL;
+
+        $this->databaseAdapter = $databaseAdapter;
 
         parent::__construct();
     }
@@ -45,8 +52,8 @@ class TestDbCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('test-db')
-            ->setDescription('Test Database');
+        $this->setName('verify-db')
+            ->setDescription('Verify Database is reachable and has a proper schema.');
     }
 
     /**
@@ -57,7 +64,14 @@ class TestDbCommand extends Command
         try {
             $output->writeln("Checking Database  ...");
 
-            $this->connectToDatabase($this->databaseURL);
+            /** @var PDO $pdo */
+            $pdo = $this->databaseAdapter->connectToDatabase($this->databaseURL);
+
+            $tables = $this->databaseAdapter->listDbTables($pdo);
+
+            if (count($tables)==0) {
+                $this->logger->info("No tables found.");
+            }
 
 //            if (!$this->validateSchema($this->entityManager)) {
 //                $this->logger->critical("Database schema is not valid.");
@@ -76,95 +90,5 @@ class TestDbCommand extends Command
 
     }
 
-    /**
-     * @param string $databaseURL
-     * @return string
-     * @throws Exception
-     */
-    protected function getDbScheme(string $databaseURL) : string
-    {
-        $scheme = parse_url($databaseURL, PHP_URL_SCHEME);
-        if (empty($scheme)) throw new Exception('Database type not specified.');
-
-        return $scheme;
-    }
-
-    /**
-     * @param string $databaseURL
-     * @return string|null
-     * @throws Exception
-     */
-    protected function getDbHost(string $databaseURL) : ?string
-    {
-        $host = parse_url($databaseURL, PHP_URL_HOST);
-        if (empty($host)) throw new Exception('Cannot find host in database URL.');
-
-        return $host;
-    }
-
-    /**
-     * @param string $databaseURL
-     * @return string|null
-     */
-    protected function getDbUser(string $databaseURL) : ?string
-    {
-        return parse_url($databaseURL, PHP_URL_USER);
-    }
-
-    /**
-     * @param string $databaseURL
-     * @return string|null
-     */
-    protected function getDbPassword(string $databaseURL) : ?string
-    {
-        return parse_url($databaseURL, PHP_URL_PASS);
-    }
-
-    /**
-     * @param string $databaseURL
-     * @return string|null
-     * @throws Exception
-     */
-    protected function getDbName(string $databaseURL) : ?string
-    {
-        $name = str_replace('/', '',parse_url($databaseURL, PHP_URL_PATH));
-        if (empty($name)) throw new Exception('Cannot find database name in database URL.');
-
-        return $name;
-    }
-
-
-    /**
-     * Test the connection to the Database Server but don't connect to the database
-     * @param string $databaseURL
-     * @return PDO
-     * @throws Exception
-     */
-    protected function connectToDatabase(string $databaseURL) : PDO
-    {
-        $scheme = $this->getDbScheme($databaseURL);
-        $host = $this->getDbHost($databaseURL);
-        $databaseName = $this->getDbName($databaseURL);
-        $user = $this->getDbUser($databaseURL);
-        $password = $this->getDbPassword($databaseURL);
-
-        try {
-            $pdo = new PDO("{$scheme}:host={$host};dbname={$databaseName}", $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-
-            $query = $pdo->prepare("SHOW TABLES");
-            $query->execute();
-            if ($results=$query->fetch()) {
-                return $pdo;
-            }
-            $this->logger->warning("Database {$databaseName} has no tables.");
-
-            return $pdo;
-        }
-        catch (Exception $ex)
-        {
-            $this->logger->critical("Cannot connect to Database server '{$host}', database name '{$databaseName}'.");
-            throw $ex;
-        }
-    }
 
 }

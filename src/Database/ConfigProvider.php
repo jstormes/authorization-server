@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App;
+namespace Database;
 
-use ContainerInteropDoctrine\EntityManagerFactory;
-use Doctrine\ORM\EntityManager;
+
 
 /**
  * The configuration provider for the App module
@@ -24,8 +23,7 @@ class ConfigProvider
     public function __invoke() : array
     {
         return [
-            'dependencies' => $this->getDependencies(),
-            'templates'    => $this->getTemplates(),
+            'dependencies' => $this->getDependencies()
         ];
     }
 
@@ -36,26 +34,11 @@ class ConfigProvider
     {
         return [
             'invokables' => [
-                Handler\PingHandler::class => Handler\PingHandler::class,
             ],
             'factories'  => [
-                EntityManager::class => EntityManagerFactory::class,
-                Handler\HomePageHandler::class => Handler\HomePageHandlerFactory::class,
+                AdapterInterface::class => AdapterFactory::class,
             ],
         ];
     }
 
-    /**
-     * Returns the templates configuration
-     */
-    public function getTemplates() : array
-    {
-        return [
-            'paths' => [
-                'app'    => ['templates/app'],
-                'error'  => ['templates/error'],
-                'layout' => ['templates/layout'],
-            ],
-        ];
-    }
 }

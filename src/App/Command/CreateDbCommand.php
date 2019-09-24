@@ -82,7 +82,7 @@ class CreateDbCommand extends Command
 
 //            $this->resetPermissions($pdo);
 
-            $output->writeln("Database Testing Passed ...");
+            $output->writeln("Database Created ...");
 
             return 0;
         }

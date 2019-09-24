@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Command;
+namespace CommandLine\Command;
 
+use Database\AdapterInterface;
 use Doctrine\ORM\EntityManager;
 use Interop\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -42,7 +43,12 @@ class CreateDbCommandFactory
             }
         }
 
-        return new CreateDbCommand($logger, $entityManager, $connectionString);
+        $databaseAdapter = $container->get(AdapterInterface::class);
+
+        $rootDbUser = getenv('PMA_USER');
+        $rootDbPassword = getenv('PMA_PASSWORD');
+
+        return new CreateDbCommand($logger, $entityManager, $connectionString, $databaseAdapter, $rootDbUser, $rootDbPassword);
     }
 
 }
