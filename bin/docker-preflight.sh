@@ -21,7 +21,7 @@ then
       echo "DB environment variable is empty."
 else
       echo "DB environment variable is NOT empty, testing DB."
-      if ! php /var/www/bin/auth-server.php test-db; then
+      if ! php /var/www/bin/auth-server.php verify-db; then
         php /var/www/bin/auth-server.php create-db
 #        php /var/www/bin/auth-server.php create-schema
       fi
