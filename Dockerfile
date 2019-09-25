@@ -21,7 +21,7 @@ RUN apt-get -y update \
 RUN a2enmod rewrite
 
 ############################################################################
-# Add preflights to apache2-foreground
+# Add preflights to apache2-foreground, allow hooks into container (Late binding)
 ############################################################################
 RUN sed -i "3i[[ -f /root/bin/docker-preflight.sh ]] && bash /root/bin/docker-preflight.sh" /usr/local/bin/apache2-foreground \
     && sed -i "4i[[ -f /var/www/bin/docker-preflight.sh ]] && bash /var/www/bin/docker-preflight.sh" /usr/local/bin/apache2-foreground
