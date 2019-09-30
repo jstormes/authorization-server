@@ -22,8 +22,10 @@ then
 else
       echo "DB environment variable is NOT empty, testing DB."
       if ! php /var/www/bin/auth-server.php verify-db; then
+        echo "DB validation failed.  Creating Database."
         php /var/www/bin/auth-server.php create-db
-#        php /var/www/bin/auth-server.php create-schema
+        doctrine --force orm:schema-tool:update
+        php /var/www/bin/auth-server.php create-history-table user
       fi
 fi
 

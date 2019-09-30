@@ -38,7 +38,8 @@ class ConfigProvider
             ],
             'factories'  => [
                 Command\VerifyDbCommand::class => Command\VerifyDbCommandFactory::class,
-                Command\CreateDbCommand::class => Command\CreateDbCommandFactory::class
+                Command\CreateDbCommand::class => Command\CreateDbCommandFactory::class,
+                Command\CreateHistoryTableCommand::class => Command\CreateHistoryTableCommandFactory::class
             ],
         ];
     }
@@ -49,6 +50,7 @@ class ConfigProvider
             'commands' => [
                 Command\VerifyDbCommand::class,
                 Command\CreateDbCommand::class,
+                Command\CreateHistoryTableCommand::class
             ],
         ];
     }

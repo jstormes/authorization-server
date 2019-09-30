@@ -19,8 +19,22 @@ interface AdapterInterface
 
     function createDbUser(PDO $pdo, string $user, string $password);
 
-    function grantDbPermissions(PDO $pdo, string $user, string $database);
+    function grantDbPermissions(PDO $pdo, string $user, string $databaseName);
 
-    function listDbTables(PDO $pdo);
+    function getDbTables(PDO $pdo);
+
+    function dropTable(PDO $pdo, string $tableName) : void;
+
+    function createTableFromExistingTable(PDO $pdo, string $tableName, string $newTableName) : void;
+
+    function addHistoryColumns(PDO $pdo, string $tableName) : void;
+
+    function createHistoryStoredProc(PDO $pdo, string $tableName) : void;
+
+    function setReadOnlyPermission(PDO $pdo, string $readOnlyUser, string $tableName) : void;
+
+    function seedHistoryTable(PDO $pdo, string $tableName, string $seed) : void;
+
+    function isHistoryTableValid(PDO $pdo, string $tableName, string $seed) : bool;
 
 }

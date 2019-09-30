@@ -25,7 +25,11 @@ return [
         'connection' => [
             'orm_default' => [
                 'params' => [
-                    'url' => getenv('DB')  // Get doctrine Database connection from Environment variable.
+                    'url' => getenv('DB'),  // Get doctrine Database connection from Environment variable.
+                    'charset'  => 'utf8mb4',
+                    'driverOptions' => array(
+                        1002 => 'SET NAMES utf8mb4'
+                    )
                 ],
             ],
         ],

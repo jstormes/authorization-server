@@ -7,4 +7,9 @@ namespace Database\Adapter;
 class mariaDb extends mysqlDb
 {
 
+    function getAdapterTypeString(): string
+    {
+        return "maria";
+    }
+
 }
