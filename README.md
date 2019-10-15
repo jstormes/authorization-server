@@ -103,6 +103,8 @@ You will need to supply a privileged database user and password interactively.  
 user from the environment variable with restricted permissions. 
 
 
+# Security setting should be easy and obvious 
+
 
 
 

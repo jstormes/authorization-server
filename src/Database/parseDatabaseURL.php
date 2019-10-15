@@ -65,4 +65,29 @@ class parseDatabaseURL
         return $name;
     }
 
+    /**
+     * @param string $databaseURL
+     * @return int|null
+     */
+    public function getDbPort(string $databaseURL) : ?int
+    {
+        $port = parse_url($databaseURL, PHP_URL_PORT);
+
+        if (empty($port)) {
+
+            $scheme = parse_url($databaseURL, PHP_URL_SCHEME);
+
+            // return defaults values for known schemes.
+            switch ($scheme) {
+                case 'mysql':
+                case 'maria':
+                    return 3306;
+                default:
+                    return null;
+            }
+        }
+
+        return $port;
+    }
+
 }

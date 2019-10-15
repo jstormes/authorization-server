@@ -67,7 +67,7 @@ class VerifyDbCommand extends Command
             /** @var PDO $pdo */
             $pdo = $this->databaseAdapter->connectToDatabase($this->databaseURL);
 
-            $tables = $this->databaseAdapter->getDbTables($pdo);
+            $tables = $this->databaseAdapter->getDbTables($pdo, null);
 
             if (count($tables)==0) {
                 $this->logger->info("No tables found.");

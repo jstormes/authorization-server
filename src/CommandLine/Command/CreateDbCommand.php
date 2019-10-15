@@ -30,10 +30,10 @@ class CreateDbCommand extends Command
     private $databaseAdapter;
 
     /** @var string */
-    private $rootDbUser;
+    private $privilegedDbUser;
 
     /** @var string */
-    private $rootDbPassword;
+    private $privilegedDbPassword;
 
     /**
      * TestDbCommand Constructor.
@@ -41,15 +41,15 @@ class CreateDbCommand extends Command
      * @param EntityManager $entityManager|null
      * @param String $databaseURL
      * @param AdapterInterface $databaseAdapter
-     * @param string $rootDbUser
-     * @param string $rootDbPassword
+     * @param string $privilegedDbUser
+     * @param string $privilegedDbPassword
      */
     public function __construct(LoggerInterface $logger,
                                 ?EntityManager $entityManager,
                                 String $databaseURL,
                                 AdapterInterface $databaseAdapter,
-                                string $rootDbUser,
-                                string $rootDbPassword)
+                                string $privilegedDbUser,
+                                string $privilegedDbPassword)
     {
         $this->logger = $logger;
 
@@ -59,9 +59,9 @@ class CreateDbCommand extends Command
 
         $this->databaseAdapter = $databaseAdapter;
 
-        $this->rootDbUser = $rootDbUser;
+        $this->privilegedDbUser = $privilegedDbUser;
 
-        $this->rootDbPassword = $rootDbPassword;
+        $this->privilegedDbPassword = $privilegedDbPassword;
 
         parent::__construct();
     }
@@ -88,27 +88,32 @@ class CreateDbCommand extends Command
 
             $urlParser = new parseDatabaseURL();
 
-            if ((empty($this->rootDbUser))&&(empty($this->rootDbPassword))) {
+            if ((empty($this->privilegedDbUser))&&(empty($this->privilegedDbPassword))) {
                 $helper = $this->getHelper('question');
                 $usernameQuestion = new Question('Privileged (root) database user name: ');
                 $usernamePassword = new Question('Privileged (root) database user password: ');
-                $this->rootDbUser = $helper->ask($input, $output, $usernameQuestion);
-                $this->rootDbPassword = $helper->ask($input, $output, $usernamePassword);
+                $this->privilegedDbUser = $helper->ask($input, $output, $usernameQuestion);
+                $this->privilegedDbPassword = $helper->ask($input, $output, $usernamePassword);
             }
 
 
             $pdo = $this->databaseAdapter->connectToHost(
                 $urlParser->getDbScheme($this->databaseURL),
                 $urlParser->getDbHost($this->databaseURL),
-                $this->rootDbUser,
-                $this->rootDbPassword
+                $this->privilegedDbUser,
+                $this->privilegedDbPassword
             );
 
-            $this->databaseAdapter->createDb($pdo, $urlParser->getDbName($this->databaseURL));
+            $database = $urlParser->getDbName($this->databaseURL);
+            $historyDatabase = $urlParser->getDbName($this->databaseURL).'_history';
+
+            $this->databaseAdapter->createDb($pdo, $database);
+            $this->databaseAdapter->createDb($pdo, $historyDatabase);
 
             $this->databaseAdapter->createDbUser($pdo, $urlParser->getDbUser($this->databaseURL), $urlParser->getDbPassword($this->databaseURL));
 
-            $this->databaseAdapter->grantDbPermissions($pdo, $urlParser->getDbUser($this->databaseURL), $urlParser->getDbName($this->databaseURL));
+            $this->databaseAdapter->grantDbPermissions($pdo, $urlParser->getDbUser($this->databaseURL), $database);
+            $this->databaseAdapter->grantDbSelectOnlyPermissions($pdo, $urlParser->getDbUser($this->databaseURL), $historyDatabase);
 
 //            $this->createSchema($pdo);
 

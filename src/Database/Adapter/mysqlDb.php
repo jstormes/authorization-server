@@ -61,7 +61,8 @@ class mysqlDb implements AdapterInterface
      */
     private function checkIfSqlSafe(string $string) : bool
     {
-        if (ctype_alnum(str_replace('_','',$string))) {
+        $string = str_replace('_','',$string);
+        if (ctype_alnum($string)) {
             return true;
         }
         throw new DatabaseException('Database and Table names can only be alphanumeric with underscore.');
@@ -72,12 +73,11 @@ class mysqlDb implements AdapterInterface
         $this->checkIfSqlSafe($databaseName);
 
         $sql = <<< EOT
-            CREATE DATABASE IF NOT EXISTS `$databaseName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+            CREATE DATABASE IF NOT EXISTS `{$databaseName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
         EOT;
 
         $query = $pdo->prepare($sql);
         $query->execute();
-
     }
 
     function createDbUser(PDO $pdo, string $user, string $password)
@@ -98,16 +98,28 @@ class mysqlDb implements AdapterInterface
         $this->checkIfSqlSafe($databaseName);
 
         $sql = <<< EOT
-            GRANT ALL PRIVILEGES ON $databaseName.* TO :name@'%'
+            GRANT ALL PRIVILEGES ON {$databaseName}.* TO :name@'%'
         EOT;
 
         $query = $pdo->prepare($sql);
         $query->bindParam(':name', $user);
         $query->execute();
-
     }
 
-    function getDbTables(PDO $pdo)
+    function grantDbSelectOnlyPermissions(PDO $pdo, string $user, string $databaseName)
+    {
+        $this->checkIfSqlSafe($databaseName);
+
+        $sql = <<< EOT
+            GRANT SELECT ON {$databaseName}.* TO :name@'%'
+        EOT;
+
+        $query = $pdo->prepare($sql);
+        $query->bindParam(':name', $user);
+        $query->execute();
+    }
+
+    function getDbTables(PDO $pdo, string $databaseName)
     {
         $query = $pdo->prepare("SHOW TABLES");
         $query->execute();
@@ -116,10 +128,16 @@ class mysqlDb implements AdapterInterface
     }
 
 
-    function isTableEmpty(PDO $pdo, string $tableName) : bool
+    function isTableEmpty(PDO $pdo, string $tableName, string $databaseName='') : bool
     {
-        $sql = <<< 'EOT'
-            SELECT count(*) FROM :table_name
+        $this->checkIfSqlSafe($databaseName);
+
+        if (!empty($databaseName)) {
+            $databaseName = $databaseName.".";
+        }
+
+        $sql = <<< EOT
+            SELECT count(*) FROM {$databaseName}:table_name
         EOT;
 
         $query = $pdo->prepare($sql);
@@ -133,12 +151,13 @@ class mysqlDb implements AdapterInterface
         return false;
     }
 
-    function dropTable(PDO $pdo, string $tableName) : void
+    function dropTable(PDO $pdo, string $databaseName, string $tableName) : void
     {
+        $this->checkIfSqlSafe($databaseName);
         $this->checkIfSqlSafe($tableName);
 
         $sql = <<< EOT
-            DROP TABLE IF EXISTS $tableName
+            DROP TABLE IF EXISTS `{$databaseName}`.`{$tableName}`
         EOT;
 
         $query = $pdo->prepare($sql);
@@ -146,41 +165,72 @@ class mysqlDb implements AdapterInterface
         $query->execute([$tableName]);
     }
 
-    function createTableFromExistingTable(PDO $pdo, string $tableName, string $newTableName) : void
+    function createTableFromExistingTable(PDO $pdo, string $sourceDatabaseName, string $sourceTableName, string $destinationDatabaseName, string $destinationTableName) : void
     {
-        $this->checkIfSqlSafe($tableName);
-
-        $this->checkIfSqlSafe($newTableName);
+        $this->checkIfSqlSafe($sourceDatabaseName);
+        $this->checkIfSqlSafe($sourceTableName);
+        $this->checkIfSqlSafe($destinationDatabaseName);
+        $this->checkIfSqlSafe($destinationTableName);
 
         $sql = <<< EOT
-            CREATE TABLE `$newTableName` AS SELECT * FROM `$tableName` limit 0
+            CREATE TABLE `{$destinationDatabaseName}`.`{$destinationTableName}` AS SELECT * FROM `{$sourceDatabaseName}`.`{$sourceTableName}` limit 0
         EOT;
 
         $pdo->prepare($sql)->execute();
     }
 
-    function addHistoryColumns(PDO $pdo, string $tableName) : void
+    function createHistoryTable(PDO $pdo, string $tableName, string $database, string $historyDatabase)
     {
         $this->checkIfSqlSafe($tableName);
+        $this->checkIfSqlSafe($database);
+        $this->checkIfSqlSafe($historyDatabase);
 
         $sql = <<< EOT
-            ALTER TABLE `{$tableName}` ADD `post_datetime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, ADD INDEX `{$tableName}_post_dt` (`post_datetime`);
+            CREATE TABLE `{$historyDatabase}`.`{$tableName}` AS SELECT * FROM `{$database}`.`{$tableName}` limit 0
         EOT;
-        $pdo->prepare($sql)->execute();
 
-//        $sql = <<< EOT
-//            ALTER TABLE `{$tableName}` ADD `sha_chain` BINARY(20) NOT NULL;
-//        EOT;
-//        $pdo->prepare($sql)->execute();
-
-        $sql = <<< EOT
-            ALTER TABLE `{$tableName}` ADD `history_id` BIGINT AUTO_INCREMENT, ADD PRIMARY KEY (`history_id`);
-        EOT;
         $pdo->prepare($sql)->execute();
     }
 
+    function addHistoryColumns(PDO $pdo, string $databaseName, string $tableName) : void
+    {
+        $this->checkIfSqlSafe($databaseName);
+        $this->checkIfSqlSafe($tableName);
 
-    function createHistoryStoredProc(PDO $pdo, string $tableName) : void
+        $sql = <<< EOT
+            ALTER TABLE `{$databaseName}`.`{$tableName}` ADD `post_datetime` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, ADD INDEX `{$tableName}_post_dt` (`post_datetime`);
+        EOT;
+        $pdo->prepare($sql)->execute();
+
+        $sql = <<< EOT
+            ALTER TABLE `{$databaseName}`.`{$tableName}` ADD `history_id` BIGINT AUTO_INCREMENT, ADD PRIMARY KEY (`history_id`);
+        EOT;
+        $pdo->prepare($sql)->execute();
+
+        $sql = <<< EOT
+            ALTER TABLE `{$databaseName}`.`{$tableName}` ADD `current_user` TEXT;
+        EOT;
+        $pdo->prepare($sql)->execute();
+
+
+        // ALTER TABLE `user` ADD `type` ENUM('INSERT','UPDATE','DELETE') NOT NULL;
+    }
+
+
+    /**
+     * The history triggers record the story of a table.  That is to say each insert, update and delete of the source table
+     * is recorded into the history table.
+     *
+     * The User that can update the source table should not have insert, update, or delete permissions on the history
+     * table.  This help ensure the integrity of the history table if the source system in compromised.
+     *
+     * @param PDO $pdo
+     * @param string $databaseName
+     * @param string $tableName
+     * @param string $historyDatabaseName
+     * @param string $historyTableName
+     */
+    function createHistoryStoredProc(PDO $pdo, string $databaseName, string $tableName, string $historyDatabaseName, string $historyTableName) : void
     {
         // UPDATE `user_history` SET `sha_chain` = UNHEX(sha1('cat')) WHERE `user_history`.`history_id` = 1
         // use sha1 of previous record
@@ -190,19 +240,31 @@ class mysqlDb implements AdapterInterface
 
         // DROP TRIGGER IF EXISTS `user_history_insert`
 
+        /**
+         * Source table MUST have unique field called "id".
+         *
+         * TODO: verify this "id" field exists and is unique.
+         */
+
         $sql = <<< EOT
-            DROP TRIGGER IF EXISTS `user_history_insert`
+            DROP TRIGGER IF EXISTS `{$databaseName}`.`{$tableName}_history_update`
         EOT;
         $pdo->prepare($sql)->execute();
 
         $sql = <<< EOT
-            CREATE DEFINER=`root`@`%` TRIGGER `user_history_insert` BEFORE UPDATE ON `user` FOR EACH ROW INSERT INTO user_history SELECT *, null, null FROM user where user.id=id
+            CREATE DEFINER=`root`@`%` TRIGGER `{$databaseName}`.`{$tableName}_history_update` BEFORE UPDATE ON `{$databaseName}`.`{$tableName}` FOR EACH ROW INSERT INTO `{$historyDatabaseName}`.`{$historyTableName}` SELECT *, null, null, USER() FROM `{$databaseName}`.`{$tableName}` where  `{$databaseName}`.`{$tableName}`.id=id
         EOT;
         $pdo->prepare($sql)->execute();
+
+        /**
+         * Should have trigger for create and delete as well
+         *
+         * TODO: add create and delete trigger.
+         */
 
     }
 
-    function setReadOnlyPermission(PDO $pdo, string $readOnlyUser, string $tableName) : void
+    function setReadOnlyPermission(PDO $pdo, string $databaseName, string $readOnlyUser) : void
     {
 
     }

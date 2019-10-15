@@ -32,10 +32,10 @@ class CreateHistoryTableCommand extends Command
     private $databaseAdapter;
 
     /** @var string */
-    private $rootDbUser;
+    private $privilegedDbUser;
 
     /** @var string */
-    private $rootDbPassword;
+    private $privilegedDbPassword;
 
     /**
      * TestDbCommand Constructor.
@@ -43,15 +43,15 @@ class CreateHistoryTableCommand extends Command
      * @param EntityManager $entityManager|null
      * @param String $databaseURL
      * @param AdapterInterface $databaseAdapter
-     * @param string $rootDbUser
-     * @param string $rootDbPassword
+     * @param string $privilegedDbUser
+     * @param string $privilegedDbPassword
      */
     public function __construct(LoggerInterface $logger,
                                 ?EntityManager $entityManager,
                                 String $databaseURL,
                                 AdapterInterface $databaseAdapter,
-                                string $rootDbUser,
-                                string $rootDbPassword)
+                                string $privilegedDbUser = '',
+                                string $privilegedDbPassword = '')
     {
         $this->logger = $logger;
 
@@ -61,9 +61,9 @@ class CreateHistoryTableCommand extends Command
 
         $this->databaseAdapter = $databaseAdapter;
 
-        $this->rootDbUser = $rootDbUser;
+        $this->privilegedDbUser = $privilegedDbUser;
 
-        $this->rootDbPassword = $rootDbPassword;
+        $this->privilegedDbPassword = $privilegedDbPassword;
 
         parent::__construct();
     }
@@ -92,43 +92,44 @@ class CreateHistoryTableCommand extends Command
 
             $urlParser = new parseDatabaseURL();
 
-            if ((empty($this->rootDbUser))&&(empty($this->rootDbPassword))) {
+            if ((empty($this->privilegedDbUser))&&(empty($this->privilegedDbPassword))) {
                 $helper = $this->getHelper('question');
                 $usernameQuestion = new Question('Privileged (root) database user name: ');
                 $usernamePassword = new Question('Privileged (root) database user password: ');
-                $this->rootDbUser = $helper->ask($input, $output, $usernameQuestion);
-                $this->rootDbPassword = $helper->ask($input, $output, $usernamePassword);
+                $this->privilegedDbUser = $helper->ask($input, $output, $usernameQuestion);
+                $this->privilegedDbPassword = $helper->ask($input, $output, $usernamePassword);
             }
 
 
             $pdo = $this->databaseAdapter->connectToHost(
                 $urlParser->getDbScheme($this->databaseURL),
                 $urlParser->getDbHost($this->databaseURL),
-                $this->rootDbUser,
-                $this->rootDbPassword,
+                $this->privilegedDbUser,
+                $this->privilegedDbPassword,
                 $urlParser->getDbName($this->databaseURL)
             );
 
+            $databaseName = $urlParser->getDbName($this->databaseURL);
+            $historyDatabaseName = $databaseName."_history";
+
             $tableName = $input->getArgument('table_name');
 
-            $historyTableName = $tableName."_history";
-
-            $this->logger->notice("Checking that history table {$historyTableName} is empty.");
-            if ( ! $this->databaseAdapter->isTableEmpty($pdo, $historyTableName) ) {
+            $this->logger->notice("Checking that history table {$tableName} is empty.");
+            if ( ! $this->databaseAdapter->isTableEmpty($pdo, $tableName, $historyDatabaseName) ) {
                 throw new DatabaseException('History Table is not Empty!');
             }
 
-            $this->logger->notice("Dropping history table {$historyTableName}.");
-            $this->databaseAdapter->dropTable($pdo, $historyTableName);
+            $this->logger->notice("Dropping history table {$tableName}.");
+            $this->databaseAdapter->dropTable($pdo, $historyDatabaseName, $tableName);
 
-            $this->logger->notice("Creating history table {$historyTableName}.");
-            $this->databaseAdapter->createTableFromExistingTable($pdo, $tableName, $historyTableName);
+            $this->logger->notice("Creating history table {$tableName}.");
+            $this->databaseAdapter->createTableFromExistingTable($pdo, $databaseName, $tableName, $historyDatabaseName, $tableName);
 
-            $this->logger->notice("Adding history columns to table {$historyTableName}.");
-            $this->databaseAdapter->addHistoryColumns($pdo, $historyTableName);
+            $this->logger->notice("Adding history columns to table {$tableName}.");
+            $this->databaseAdapter->addHistoryColumns($pdo, $historyDatabaseName, $tableName);
 
             $this->logger->notice(("Creating Stored Procedure."));
-            $this->databaseAdapter->createHistoryStoredProc($pdo, $tableName);
+            $this->databaseAdapter->createHistoryStoredProc($pdo, $databaseName, $tableName, $historyDatabaseName, $tableName);
 
             $output->writeln("History Table Created ...");
 
